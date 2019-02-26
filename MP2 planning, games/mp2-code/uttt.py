@@ -16,7 +16,7 @@ class ultimateTicTacToe:
                     ['_','_','_','_','_','_','_','_','_'],
                     ['_','_','_','_','_','_','_','_','_'],
                     ['_','_','_','_','_','_','_','_','_']]
-"""        self.board=[['_','_','_','_','_','_','_','_','_'],
+        """        self.board=[['_','_','_','_','_','_','_','_','_'],
                     ['_','_','_','_','_','_','_','_','_'],
                     ['_','_','_','_','_','_','_','_','_'],
                     ['_','_','_','X','X','_','_','_','_'],
@@ -25,6 +25,7 @@ class ultimateTicTacToe:
                     ['_','_','_','_','_','_','_','_','_'],
                     ['_','_','_','_','_','_','_','_','_'],
                     ['_','_','_','_','_','_','_','_','_']]"""
+        """[[x for x in range(9)] for i in range(9)]"""
         self.maxPlayer='X'
         self.minPlayer='O'
         self.maxDepth=3
@@ -57,7 +58,21 @@ class ultimateTicTacToe:
         print('\n'.join([' '.join([str(cell) for cell in row]) for row in self.board[3:6]])+'\n')
         print('\n'.join([' '.join([str(cell) for cell in row]) for row in self.board[6:9]])+'\n')
 
-    def small3combos(self,gi):
+
+    
+    def all3combos(self):
+        """"
+        Just calls small3combos for all small boards on the big one
+        input: none
+        output: list of all 3 combos to look at in the board
+        """
+        ret =[]
+        for g in self.globalIdx:
+            set=self.checkcombos(g)
+            ret+=set
+        return ret
+            
+    def checkcombos(self,gi):
         """"
         This is a helper function that outputs all valid 3 combos to check for in a small tic tac toe board as lists
         input: global index of board you're looking at
@@ -68,22 +83,9 @@ class ultimateTicTacToe:
         for i in range(3):
             ret.append(self.board[x+i][y:y+3]) #rows
             ret.append([self.board[x+j][y+i] for j in range(0,3)]) #cols
-        ret.append([self.board[x][y],self.board[x+1][y+1],self.board[x+2][y+2]) #diagonal left right
-        ret.append([self.board[x+3][y], self.board[x+1][y+1], self.board[x][y+3]]) # diagonal right left
+        ret.append([self.board[x][y], self.board[x+1][y+1],self.board[x+2][y+2]]) #diagonal left right
+        ret.append([self.board[x+2][y], self.board[x+1][y+1], self.board[x][y+2]]) # diagonal right left
         return ret 
-    
-    def all3combos(self)
-    """"
-    Just calls small3combos for all small boards on the big one
-    input: none
-    output: list of all 3 combos to look at in the board
-    """
-    ret =[]
-    for g in self.globalIdx:
-        ret+=small3combos(g)
-    return ret
-            
-
 
     def evaluatePredifined(self, isMax):
         """
@@ -98,33 +100,22 @@ class ultimateTicTacToe:
         won = checkWinner()
         if won: #rule 1
             return 10000*won 
+        
         #rule 2
-        for x,y in self.globalIdx: #go through all boards
-            for i in range(3):
-                row = self.board[x+i][y:y+3] #check each row for 2
-                if (row.count(self.maxPlayer)==2:
-                    if (self.minPlayer not in row) && isMax:
-                        score+=500 #score for max player
-                    else if !isMax:
-                        score -=500 #prevention for min player
-                col = [self.board[x+j][y+i] for j in range(0,3)] #check each column for 2
-                if(col.count(self.maxPlayer==2)):
-                    if (self.minPlayer not in row) && isMax:
-                        score+=500
-                    else if !isMax:
-                        score -=500 #prevention
-            diagonal1 = [self.board[x][y],self.board[x+1][y+1],self.board[x+2][y+2]
-            if (diagonal1.count(self.maxPlayer)==2):
-                if (self.minPlayer not in row) && isMax:
-                        score+=500
-                    else if !isMax:
-                        score -=500 #prevention
-            diagonal2=[self.board[x+3][y], self.board[x+1][y+1], self.board[x][y+3]]
-            if (diagonal2.count(self.maxPlayer)==2):
-                if (self.minPlayer not in row) && isMax:
-                        score+=500
-                    else if !isMax:
-                        score -=500 #prevention
+        rows= all3combos() #all possible connections of 3 on the board
+        score=0
+        for r in rows:
+            if isMax:
+                if r.count(self.maxPlayer)==2 and (self.minPlayer not in r): #two in a row unblocked
+                    score+=self.twoInARowMaxUtility()
+                if r.count(self.minPlayer)==2 and r.count(self.maxPlayer)==1: #block min
+                    score+=self.preventThreeInARowMaxUtility
+            else:
+                if r.count(self.minPlayer)==2 and (self.maxPlayer not in r): #two in a row unblocked
+                    score+=self.twoInARowMinUtility()
+                if r.count(self.maxPlayer)==2 and r.count(self.minPlayer)==1:#block max
+                    score+=self.preventThreeInARowMinUtility
+
 
         #don't do rule 3 if it was evaluated under rule 2
         if score!=0: return score 
@@ -133,9 +124,9 @@ class ultimateTicTacToe:
             for j in range(9):
                 if i%3!=1 and j%3!=1:
                     if isMax and self.board[i][j]==self.maxPlayer:
-                        score+=30
-                    elif !isMax and self.board[i][j]==self.minPlayer:
-                        score-=30     
+                        self.cornerMaxUtility+=30
+                    elif (not isMax) and self.board[i][j]==self.minPlayer:
+                        self.cornerMinUtility-=30     
 
 
         return score
@@ -177,7 +168,7 @@ class ultimateTicTacToe:
                      Return -1 if miniPlayer is the winner.
         """
         #YOUR CODE HERE
-        combos=all3combos()
+        combos=self.all3combos()
         for i in combos: # go through all row combinations... if you have 3 of same kind in a row. that person wins!
             if i.count(self.maxPlayer)==3: return 1
             if i.count(self.minPlayer)==3: return -1
@@ -213,19 +204,20 @@ class ultimateTicTacToe:
         output:
         bestValue(float):the bestValue that current player may have
         """
-        if depth==3:
+        if depth==self.maxDepth: #if you are at maxdepth, evaluate predefined
             return evaluatePredifined(isMax)
         
         values = []
         options = {} #holds potential moves so we know which one returns the max
-        for i in range(9)
+        for i in range(9):
             #check if there is an available spot there
             gi= self.globalIdx[currBoardIdx]
             if self.board[gi[0]+i/3][gi[1]+i%3]!='_': continue
             
             #if so add it to the board and evaluate
             self.board[gi[0]+i/3][gi[1]+i%3]=self.maxPlayer if isMax else self.minPlayer
-            val = minimax(depth+1,i,!isMax)
+            self.expandedNodes+=1
+            val = minimax(depth+1,i,(not isMax))
             self.board[gi[0]+i/3][gi[1]+i%3]='_' #remove it for other tests
             values.append(val)
             options[val]=i
@@ -252,16 +244,50 @@ class ultimateTicTacToe:
         gameBoards(list of 2d lists): list of game board positions at each move
         winner(int): 1 for maxPlayer is the winner, -1 for minPlayer is the winner, and 0 for tie.
         """
+        #max is offensive, min is defensive
         #YOUR CODE HERE
         bestMove=[]
         bestValue=[]
         gameBoards=[]
+        expandedNodes=[]
         winner=0
+
+        while (self.checkMovesLeft() and not self.checkWinner()):
+            atglobal=0 #stores which global index we are at
+            if isMinimaxOffensive and isMinimaxDefensive: #case of minimax vs minimax offensive (max) ifrst
+                if maxFirst:
+                    values = []
+                    options = {} #holds potential moves so we know which one returns the max
+                    for i in range(9):
+                        #check if there is an available spot there
+                        gi= self.globalIdx[atglobal]
+                        if self.board[gi[0]+i/3][gi[1]+i%3]!='_': continue
+                        
+                        #if so add it to the board and evaluate
+                        self.board[gi[0]+i/3][gi[1]+i%3]=self.maxPlayer 
+                        self.expandedNodes+=1
+                        val = minimax(depth+1,i,(not isMax))
+                        self.board[gi[0]+i/3][gi[1]+i%3]='_' #remove it for other tests
+                        values.append(val)
+                        options[val]=i
+
+                    #now find max and do the move, and store the values...
+                    maxval=max(values)
+                    bestValue.append(maxval)
+                    bestidx=min(options[maxval]) #this is just if multiple idices had same value, chose smallest index
+                    best=(self.globalIdx[atglobal][0]+bestidx/3,self.globalIdx[atglobal][1]+bestidx%3)
+                    bestMove.append(best)
+                    self.board[best[0]][best[1]]=self.maxPlayer
+                    gameBoards.append(self.board)
+                    expandedNodes.append(self.exapndedNodes)
+                    self.expandedNodes=0
+        ##NOTE: STILL NEED TO ADD SECOND PLAYER'S RESPONSE!
+
+
         return gameBoards, bestMove, expandedNodes, bestValue, winner
 
     def playGameYourAgent(self):
-        """
-        This function implements the processes of the game of your own agent vs predifined offensive agent.
+        """ rocesses of the game of your own agent vs predifined offensive agent.
         input args:
         output:
         bestMove(list of tuple): list of bestMove coordinates at each step
@@ -291,7 +317,10 @@ class ultimateTicTacToe:
 
 if __name__=="__main__":
     uttt=ultimateTicTacToe()
-    gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,False,False)
+    gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,True,True)#(True,False,False)
+   # c=uttt.checkcombos(uttt.globalIdx[0])
+   # for ca in c: print(ca)
+    uttt.printGameBoard()
     if winner == 1:
         print("The winner is maxPlayer!!!")
     elif winner == -1:
