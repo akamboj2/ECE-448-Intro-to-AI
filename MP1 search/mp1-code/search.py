@@ -31,9 +31,7 @@ def search(maze, searchMethod):
     }.get(searchMethod)(maze)
 
 
-def bfs(maze):
-    # TODO: Write your code here
-#    print("HELLOW!",maze.getDimensions())
+def bfs(maze): #bfs search with queue
     start = maze.getStart() #tuple of position
     at = start
     objs = maze.getObjectives() # list of objectives
@@ -68,7 +66,7 @@ def bfs(maze):
     return path,cnt
 
 
-def dfs(maze): #should be same as BFS except with stack instead of queue
+def dfs(maze): #should be same as BFS except with stack instead of stack
     # TODO: Write your code here
     start = maze.getStart() #tuple of position
     at = start
@@ -147,52 +145,74 @@ def greedy(maze):
     return path,cnt
 
 def h_astar(p,objs):
-    small = ((p[0]-objs[0][0])**2+(p[1]-objs[0][1])**2)**.5
+#    print("checking heuristic for ",p)
+#    print("objectives",objs)
+    small = ((p[0]-objs[0][0])**2.+(p[1]-objs[0][1])**2.)**.5
+#    print("small is ",small)
+    closest=objs[0]
     for o in objs: 
-        if ((p[0]-o[0])**2+(p[1]-o[1])**2)**.5<small:
-            small=((p[0]-o[0])**2+(p[1]-o[1])**2)**.5
+        if ((p[0]-o[0])**2.+(p[1]-o[1])**2.)**.5<small:
+            small=((p[0]-o[0])**2.+(p[1]-o[1])**2.)**.5
+#            print("now small is ",small," from ",o)
+            closest=o
+#    print("closest o is ",closest)
     return small
 
 def astar(maze):
-        # TODO: Write your code here
     start = maze.getStart() #tuple of position
+ #   print("start",start)
+ #   print("Dims",maze.getDimensions())
     at = start
     objs = maze.getObjectives() # list of objectives
     goal=objs[0]
     explored = {at:at} #holds nodes that we have explored and their predecessor
-    frontier = [[at,at,0]] #list of nodes yet to explore and their predecessor
+    frontier = [] #list of nodes yet to explore and their predecessor
                          #we can mark start's predecessor as itself
                          #now we also need to keep track of how many steps from start
     cnt=0
     path=[]
-
- #   print("Goal is: ",goal)
     dist_start =0    #this is distance from start of the node you are at
+    all_explored=[]
+    prev=at
     while(len(objs)!=0):
+        explored[at]=prev
         if (at in objs):
+ #           print("\n\nreached objective!!!",at)
             objs.remove(at) #remove objective from list. reached it!
             curr_obj = at
+            curr_path=[]
             while(True):   #now make it seem like this is the new begining for the next node
-                path.append(at)
+                curr_path.append(at)
                 next=explored[at]
                 if next==at: break
                 at= next
+            curr_path.reverse()
+            path+=curr_path
+            at=curr_obj
+            for i in explored: #if it's not in all explored add it!
+                if i not in all_explored:
+                    all_explored.append(i)
             explored = {at:at} 
-            frontier = [[at,at,0]]
+            frontier = []
             if len(objs)==0: break
-        cnt+=1
-    #if at in objs: objs.pop(objs.index(at)) #remove objective if your at it
+        #if at in objs: objs.pop(objs.index(at)) #remove objective if your at it
         neighbors = maze.getNeighbors(at[0],at[1])
         for i in neighbors:     
             if ((i not in explored) and (i not in [n[0] for n in frontier])): 
                 frontier.append([i,at,dist_start+1]) #insert all neighbors in queue
-        min_astar_h=frontier[0] #find the node in frontier with smallest heuristic
-        for f in frontier:
+        #now find the node in frontier with smallest heuristic
+        min_astar_h=frontier[0] 
+ #       print("\n\n*STARTING FRONTIER AT: ",at,frontier)
+        for f in frontier: #f[0] is cordinates, f[2] is cost-to-goal
+#            print("considering",f) #f is a structure [current_cord,prev,_coord,distance]
+#            print("rn min is ",min_astar_h)
             if h_astar(f[0],objs)+f[2]<h_astar(min_astar_h[0],objs)+min_astar_h[2]:
+  #              print("\nYES! f is better!:",f)
                 min_astar_h=f
+#        print("min_astar is ",min_astar_h)
         at,prev,dist_start=min_astar_h 
         frontier.remove(min_astar_h)
-        explored[at]=prev
+#        print("explored",explored)
  #       print("at is: ",at)
 
 #  #   print("Goal is: ",goal)
@@ -214,13 +234,9 @@ def astar(maze):
 #  #       print("at is: ",at)
 
     #now at should be at goal so find path by going backwards through dictionary
-    while(True):
-        path.append(at)
-        next=explored[at]
-        if next==at: break
-        at= next
-    path.reverse()
+ 
     #return path, num_states_explored
     #return list(explored.keys()),cnt #if you want to see how much it explored
     #print(path)
-    return path,cnt
+    #return path,cnt
+    return path,len(all_explored)
