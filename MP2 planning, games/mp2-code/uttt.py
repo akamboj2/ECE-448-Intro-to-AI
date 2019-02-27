@@ -97,36 +97,35 @@ class ultimateTicTacToe:
         score(float): estimated utility score for maxPlayer or minPlayer
         """
         score=0
-        won = checkWinner()
+        won = self.checkWinner()
         if won: #rule 1
             return 10000*won 
         
         #rule 2
-        rows= all3combos() #all possible connections of 3 on the board
+        rows= self.all3combos() #all possible connections of 3 on the board
         score=0
         for r in rows:
             if isMax:
                 if r.count(self.maxPlayer)==2 and (self.minPlayer not in r): #two in a row unblocked
-                    score+=self.twoInARowMaxUtility()
-                if r.count(self.minPlayer)==2 and r.count(self.maxPlayer)==1: #block min
+                    score+=self.twoInARowMaxUtility
+                if r.count(self.minPlayer)==2 and r.count(self.maxPlayer)==1: #max blocks min
                     score+=self.preventThreeInARowMaxUtility
             else:
                 if r.count(self.minPlayer)==2 and (self.maxPlayer not in r): #two in a row unblocked
-                    score+=self.twoInARowMinUtility()
-                if r.count(self.maxPlayer)==2 and r.count(self.minPlayer)==1:#block max
+                    score+=self.twoInARowMinUtility
+                if r.count(self.maxPlayer)==2 and r.count(self.minPlayer)==1:#min blocks max
                     score+=self.preventThreeInARowMinUtility
 
 
         #don't do rule 3 if it was evaluated under rule 2
         if score!=0: return score 
-        corners = []
         for i in range(9):
             for j in range(9):
                 if i%3!=1 and j%3!=1:
                     if isMax and self.board[i][j]==self.maxPlayer:
-                        self.cornerMaxUtility+=30
+                        score+=self.cornerMaxUtility
                     elif (not isMax) and self.board[i][j]==self.minPlayer:
-                        self.cornerMinUtility-=30     
+                        score-=self.cornerMinUtility
 
 
         return score
@@ -205,27 +204,27 @@ class ultimateTicTacToe:
         bestValue(float):the bestValue that current player may have
         """
         if depth==self.maxDepth: #if you are at maxdepth, evaluate predefined
-            return evaluatePredifined(isMax)
+            return self.evaluatePredifined(isMax)
         
         values = []
-        options = {} #holds potential moves so we know which one returns the max
         for i in range(9):
-            #check if there is an available spot there
             gi= self.globalIdx[currBoardIdx]
-            if self.board[gi[0]+i/3][gi[1]+i%3]!='_': continue
+            row=int(gi[0]+i/3)
+            col=int(gi[1]+i%3)
+
+            #check if there is an available spot there
+            if self.board[row][col]!='_': continue
             
             #if so add it to the board and evaluate
-            self.board[gi[0]+i/3][gi[1]+i%3]=self.maxPlayer if isMax else self.minPlayer
+            self.board[row][col]=self.maxPlayer if isMax else self.minPlayer
             self.expandedNodes+=1
-            val = minimax(depth+1,i,(not isMax))
-            self.board[gi[0]+i/3][gi[1]+i%3]='_' #remove it for other tests
+            val = self.minimax(depth+1,i,(not isMax))
+            self.board[row][col]='_' #remove it for other tests
             values.append(val)
-            options[val]=i
+
         #now find min or max
         if isMax: return max(values)
         else: return min(values)
-      #  bestValue=0.0
-       # return bestValue
 
     def playGamePredifinedAgent(self,maxFirst,isMinimaxOffensive,isMinimaxDefensive):
         """
@@ -251,43 +250,91 @@ class ultimateTicTacToe:
         gameBoards=[]
         expandedNodes=[]
         winner=0
+        atglobal=4 #stores which global index we are at
 
         while (self.checkMovesLeft() and not self.checkWinner()):
-            atglobal=0 #stores which global index we are at
-            if isMinimaxOffensive and isMinimaxDefensive: #case of minimax vs minimax offensive (max) ifrst
-                if maxFirst:
-                    values = []
-                    options = {} #holds potential moves so we know which one returns the max
-                    for i in range(9):
-                        #check if there is an available spot there
-                        gi= self.globalIdx[atglobal]
-                        if self.board[gi[0]+i/3][gi[1]+i%3]!='_': continue
-                        
-                        #if so add it to the board and evaluate
-                        self.board[gi[0]+i/3][gi[1]+i%3]=self.maxPlayer 
-                        self.expandedNodes+=1
-                        val = minimax(depth+1,i,(not isMax))
-                        self.board[gi[0]+i/3][gi[1]+i%3]='_' #remove it for other tests
-                        values.append(val)
-                        options[val]=i
+            #if isMinimaxOffensive and isMinimaxDefensive: #case of minimax vs minimax offensive (max) first
+            if maxFirst:
+                values = []
+                options = {} #holds potential moves so we know which one returns the max
+                for i in range(9):
+                    gi= self.globalIdx[atglobal]
+                    row=gi[0]+i//3
+                    col=gi[1]+i%3
 
-                    #now find max and do the move, and store the values...
-                    maxval=max(values)
-                    bestValue.append(maxval)
-                    bestidx=min(options[maxval]) #this is just if multiple idices had same value, chose smallest index
-                    best=(self.globalIdx[atglobal][0]+bestidx/3,self.globalIdx[atglobal][1]+bestidx%3)
-                    bestMove.append(best)
-                    self.board[best[0]][best[1]]=self.maxPlayer
-                    gameBoards.append(self.board)
-                    expandedNodes.append(self.exapndedNodes)
-                    self.expandedNodes=0
+                    #check if there is an available spot there
+                    if self.board[row][col]!='_': continue
+                    
+                    #if there is an empty spot add it to the board and evaluate
+                    self.board[row][col]=self.maxPlayer if maxFirst else self.minPlayer
+                    self.expandedNodes+=1
+                    
+                    val = self.minimax(0 ,i,True) if isMinimaxOffensive else self.alphabeta(0,i,9999,9999,True)
+                    self.board[row][col]='_' #remove it for other tests
+                    values.append(val) #add the value for that move to the other possibilites
+                    if val not in options.keys(): #add store that value and the corresponding move that caused it
+                        options[val]=[i]
+                    else: 
+                        options[val].append(i)
+
+                #now find max and do the move, and store the values...
+                chosenval=max(values) if maxFirst else min(values)
+                bestValue.append(chosenval)
+                bestidx=min(options[chosenval]) #this is just if multiple idices had same value, chose smallest index
+                best=(self.globalIdx[atglobal][0]+bestidx//3,self.globalIdx[atglobal][1]+bestidx%3)
+                bestMove.append(best)
+                self.board[best[0]][best[1]]=self.maxPlayer if maxFirst else self.minPlayer
+                atglobal=bestidx
+                gameBoards.append(self.board)
+                expandedNodes.append(self.expandedNodes)
+                self.expandedNodes=0
+                maxFirst = not maxFirst #switches who's turn it is
+              #  print("max just played from values of: ",options)
+              #  self.printGameBoard()
+
+                """winner=self.checkWinner()
+                if winner:
+                    return gameBoards, bestMove, expandedNodes, bestValue, winner
         ##NOTE: STILL NEED TO ADD SECOND PLAYER'S RESPONSE!
+                #now we do same thing for second player's response!
+                values = []
+                options = {} #holds potential moves so we know which one returns the max
+                for i in range(9):
+                    #check if there is an available spot there
+                    gi= self.globalIdx[atglobal]
+                    row=gi[0]+i//3
+                    col=gi[1]+i%3
+                    if self.board[row][col]!='_': continue
+                    
+                    #if there is an empty spot add it to the board and evaluate
+                    self.board[row][col]=self.minPlayer 
+                    self.expandedNodes+=1
+                    val = self.minimax(0 ,i,False) if isMinimaxDefensive else self.alphabeta(0,i,9999,9999,True)
+                    self.board[row][col]='_' #remove it for other tests
+                    values.append(val) #add the value for that move to the other possibilites
+                    if val not in options.keys(): #add store that value and the corresponding move that caused it
+                        options[val]=[i]
+                    else: 
+                        options[val].append(i)
 
-
-        return gameBoards, bestMove, expandedNodes, bestValue, winner
+                #now find max and do the move, and store the values...
+                minval=min(values)
+                bestValue.append(minval)
+                bestidx=min(options[minval]) #this is just if multiple idices had same value, chose smallest index
+                best=(self.globalIdx[atglobal][0]+bestidx//3,self.globalIdx[atglobal][1]+bestidx%3)
+                bestMove.append(best)
+                self.board[best[0]][best[1]]=self.minPlayer
+                atglobal=bestidx
+                gameBoards.append(self.board)
+                expandedNodes.append(self.expandedNodes)
+                self.expandedNodes=0
+               # print("min just played from values of: ",options)
+                #self.printGameBoard()
+"""
+        return gameBoards, bestMove, expandedNodes, bestValue, self.checkWinner()
 
     def playGameYourAgent(self):
-        """ rocesses of the game of your own agent vs predifined offensive agent.
+        """processes of the game of your own agent vs predifined offensive agent.
         input args:
         output:
         bestMove(list of tuple): list of bestMove coordinates at each step
