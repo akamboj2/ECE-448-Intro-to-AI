@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-soln = []
+soln = {}
 
 def add(board, pent, coord):
     """
@@ -34,6 +34,7 @@ def solve(board_p, pents_p):
     
     -You can assume there will always be a solution.
     """
+    """
  #   print("TYPE!: ",type(pents_p))
     board=np.copy(board_p)
     pents=np.copy(pents_p).tolist() 
@@ -51,9 +52,9 @@ def solve(board_p, pents_p):
    # print(soln)
     return soln
    # raise NotImplementedError
+"""
 
-
-
+"""
 def csp(board,pents):
     #find the first open spot going right to left
     #pent = pents[len(pents)-1]
@@ -78,4 +79,105 @@ def csp(board,pents):
                                     #if u come back from recursive call and soln is full ur done
                                     return
                             p = np.rot90(p)
-            
+            """
+
+class PentStruct:
+    #these two variable declared outside init without self are static/class variables (consistent throughout all instances of class)
+    count_spots=0
+    available=True 
+    def __init__(self,givenID,numpents):
+        self.id=givenID
+
+class Pent(PentStruct):
+    def __init__(self,idgiven,array,givenr=0,givenc=0,fn=0,rn=0):
+        super().__init__(idgiven)
+        self.r=givenr #note this r,c is the topleft of the corner array.
+        self.c=givenc
+        self.flipnum=fn
+        self.rotnum=rn
+        self.arr=array
+        
+
+def pent_init(pents,board):
+    """
+    Initializes needed dictionary/data structures for algorithm
+    input: pent arrays, and board
+    Returns a dicitonary of Pent objects covering every space of the board
+    """
+    b={}
+    for p in pents:
+        id=get_pent_idx(p)
+        for row in range(board.shape[0]):
+            for col in range(board.shape[1]):
+                if board[row][col]==0: continue #we're only tiling the 1s on the board
+              #  print("at",row,",",col)
+                for flipnum in range(3): #for rotations (just using is_pentomino's method)
+                    if flipnum > 0:
+                        p = np.flip(p, flipnum-1)
+                    for rot_num in range(4):
+                #        print(p)
+                #        print('\t',row,p.shape[0],col,p.shape[1])
+                        if row+p.shape[0] <= board.shape[0] and col+p.shape[1] <= board.shape[1]: #this means it fits on board at this position
+                #            print("fits board dimensions")
+                            p_obj=Pent(id,p,row,col,flipnum,rot_num)
+                            p_obj.count_spots+=1 #because we are adding a potential spot of where it can be
+                            #now loop through pent array and add r,c locations to dictionary if needed
+                            for r in range(p.shape[0]): 
+                                for c in range(p.shape[1]):
+                 #                   print('\t',r,p.shape[0],c,p.shape[1])
+                                    if p[r][c] != 0:
+                                        if (row+r,col+c) in b.keys():
+                                            pent_in=False   #check to make sure you're not reusing the rotations that are equivalent (rotating squre vs. L shape)
+                                            for checkp in b[(row+r,col+c)]:
+                                                if np.array_equal(p,checkp.arr):
+                                                    pent_in=True
+                                            if not pent_in:
+                                                b[(row+r,col+c)].append(p_obj)
+                                        else:
+                                            b[(row+r,col+c)]=[p_obj]
+                        p=np.rot90(p)
+
+    return b
+
+
+def bt(b,available_locs):#available locations will have to hold the values of locations with 1 in them
+    #first chose row,col location with fewest possible pents. need list of row,col locations
+    small_loc=available_locs[0] 
+    for l in available_locs:
+        if len(b[l])<len(b[small_loc]): #len runs in O(1) so don't be afraid to use it!
+            small_loc=l
+
+    #now go through each pent's count_spots in that location and chose the one that has les
+
+
+
+
+
+def get_pent_idx(pent):
+    """
+    Returns the index of a pentomino.
+    """
+    pidx = 0
+    for i in range(pent.shape[0]):
+        for j in range(pent.shape[1]):
+            if pent[i][j] != 0:
+                pidx = pent[i][j]
+                break
+        if pidx != 0:
+            break
+    if pidx == 0:
+        return -1
+    return pidx - 1
+
+
+if __name__=="__main__":
+    #THIS PART TESTS PENT INIT!
+    #pents= [np.array([[1],[1]]),np.array([[2],[2]])]
+    pents=[np.array([[1,0],[1,1]]),np.array([[2,0],[2,2]])]
+    board = np.ones((2,2))
+    print(pents,'\n',board)
+    b=pent_init(pents,board)
+    for ind in b:
+        print(ind,":")
+        for i in b[ind]:
+            print("\t",i.id,i.arr)
