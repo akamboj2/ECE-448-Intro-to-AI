@@ -95,9 +95,12 @@ class ultimateTicTacToe:
         output: 
         score(float): estimated utility score for maxPlayer or minPlayer
         """
+        self.expandedNodes+=1
+
+        #print(isMax)
         score=0
         won = self.checkWinner()
-        if won: #rule 1
+        if (won==1 and isMax) or (won==-1 and (not isMax)): #rule 1
             return 10000*won 
         
         #rule 2
@@ -125,7 +128,6 @@ class ultimateTicTacToe:
                         score+=self.cornerMaxUtility
                     elif (not isMax) and self.board[i][j]==self.minPlayer:
                         score+=self.cornerMinUtility
-
 
         return score
 
@@ -201,12 +203,15 @@ class ultimateTicTacToe:
         output:
         bestValue(float):the bestValue that current player may have
         """
-        if depth==self.maxDepth: #if you are at maxdepth, evaluate predefined
-            return self.evaluatePredifined(isMax)
+        if depth==self.maxDepth or self.checkWinner()!=0 or not self.checkMovesLeft(): #if you are at maxdepth, evaluate predefined
+            score= self.evaluatePredifined(self.currPlayer)
+       #     print("score: ",score)
+            return score
         
         values = []
         for i in range(9):
             gi= self.globalIdx[currBoardIdx]
+    #        print("At board: ",gi,"Max is moving" if isMax else "Min is moving","depth is ",depth )
             row=gi[0]+i//3 #// is integer division
             col=gi[1]+i%3
 
@@ -217,6 +222,8 @@ class ultimateTicTacToe:
             self.board[row][col]=self.maxPlayer if isMax else self.minPlayer
             self.expandedNodes+=1
             val = self.minimax(depth+1,i,(not isMax))
+            #print("depth: ",depth)
+      #      self.printGameBoard()
             self.board[row][col]='_' #remove it for other tests
             values.append(val)
 
@@ -247,8 +254,8 @@ class ultimateTicTacToe:
         bestValue=[]
         gameBoards=[]
         expandedNodes=[]
-        winner=0
         atglobal=4 #stores which global index we are at
+        self.currPlayer= True if maxFirst else False
 
         while (self.checkMovesLeft() and not self.checkWinner()):
             #if isMinimaxOffensive and isMinimaxDefensive: #case of minimax vs minimax offensive (max) first
@@ -256,6 +263,7 @@ class ultimateTicTacToe:
             options = {} #holds potential moves so we know which one returns the max
             for i in range(9):
                 gi= self.globalIdx[atglobal]
+        #        print("At board: ",gi,"Max is moving" if self.currPlayer else "Min is moving","depth is ",0 )
                 row=gi[0]+i//3
                 col=gi[1]+i%3
 
@@ -263,31 +271,32 @@ class ultimateTicTacToe:
                 if self.board[row][col]!='_': continue
                 
                 #if there is an empty spot add it to the board and evaluate
-                self.board[row][col]=self.maxPlayer if maxFirst else self.minPlayer
+                self.board[row][col]=self.maxPlayer if self.currPlayer else self.minPlayer
                 self.expandedNodes+=1
-                
-                val = self.minimax(0 ,i,True if maxFirst else False) if isMinimaxOffensive else self.alphabeta(0,i,-inf,inf,True)
+                val = self.minimax(1 ,i,not self.currPlayer) if isMinimaxOffensive else self.alphabeta(0,i,-inf,inf,True)
+        #        self.printGameBoard()
                 self.board[row][col]='_' #remove it for other tests
                 values.append(val) #add the value for that move to the other possibilites
                 if val not in options.keys(): #add store that value and the corresponding move that caused it
                     options[val]=[i]
                 else: 
                     options[val].append(i)
+            
 
             #now find max and do the move, and store the values...
-            chosenval=max(values) if maxFirst else min(values)
+            chosenval=max(values) if self.currPlayer else min(values)
             bestValue.append(chosenval)
             bestidx=min(options[chosenval]) #this is just if multiple indices had same value, chose smallest index
             best=(self.globalIdx[atglobal][0]+bestidx//3,self.globalIdx[atglobal][1]+bestidx%3)
             bestMove.append(best)
-            self.board[best[0]][best[1]]=self.maxPlayer if maxFirst else self.minPlayer
+            self.board[best[0]][best[1]]=self.maxPlayer if self.currPlayer else self.minPlayer
             atglobal=bestidx
             gameBoards.append(self.board)
             expandedNodes.append(self.expandedNodes)
             self.expandedNodes=0
-            print("max just played from values of: " if maxFirst else "min just played from values of: ",options)
-            self.printGameBoard()
-            maxFirst = not maxFirst #switches who's turn it is
+ #           print("max just played from values of: " if self.currPlayer else "min just played from values of: ",options)
+ #           self.printGameBoard()
+            self.currPlayer = not self.currPlayer#switches who's turn it is
 
         return gameBoards, bestMove, expandedNodes, bestValue, self.checkWinner()
 
@@ -326,7 +335,7 @@ if __name__=="__main__":
    # c=uttt.checkcombos(uttt.globalIdx[0])
    # for ca in c: print(ca)
     uttt.printGameBoard()
-    print("number of nodes expanded: ", expandedNodes[len(expandedNodes)-1])
+    print("number of nodes expanded in last turn: ", expandedNodes[len(expandedNodes)-1])
     # for i in gameBoards:
     #     for j in i:
     #         print(j)

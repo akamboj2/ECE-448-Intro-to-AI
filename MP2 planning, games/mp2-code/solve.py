@@ -2,25 +2,6 @@
 import numpy as np
 soln = {}
 
-def add(board, pent, coord):
-    """
-    Adds a pentomino pent to the board. The pentomino will be placed such that
-    coord[0] is the lowest row index of the pent and coord[1] is the lowest 
-    column index. 
-    """
-    pent=np.array(pent)
-    for row in range(pent.shape[0]): #go through shape to check if it's valid
-        for col in range(pent.shape[1]):
-            if coord[0]+row >= board.shape[0] or coord[1]+col >=board.shape[1]:
-                return False
-            if pent[row][col] != 0 and board[coord[0]+row][coord[1]+col] != -1: 
-                return False
-    
-    for row in range(pent.shape[0]): #no go through and place pentomino
-        for col in range(pent.shape[1]):
-            board[coord[0]+row][coord[1]+col] = pent[row][col]                                
-    return True
-    
 def solve(board_p, pents_p):
     """
     This is the function you will implement. It will take in a numpy array of the board
@@ -34,69 +15,41 @@ def solve(board_p, pents_p):
     
     -You can assume there will always be a solution.
     """
-    """
  #   print("TYPE!: ",type(pents_p))
+
     board=np.copy(board_p)
     pents=np.copy(pents_p).tolist() 
-    # try to place pieces:
-    #try sorting pieces first to see if it makes it faster
-    #try starting on different spot in board to see if it's faster
-    board
-    for i in range(board.shape[0]): #do this so we can differntiated piece with index 1 and open spot
-        for j in range(board.shape[1]):
-            if board[i][j]==1: board[i][j]=-1
-    pentlen=len(pents)
-    while(len(soln)!=pentlen):
-        csp(board,pents)
-
+    b=pent_init(pents,board)
+    locations=list(b.keys())
+    print(soln)
+    print(Pent.win)
+    # for ind in b:
+    #     print(ind,":")
+    #     for i in b[ind]:
+    #         print("\t",i.id,i.arr)
+    while(len(soln)!=len(pents_p)):
+        backtrack(b,locations)
+        
+   # put_on_board(board)
+    print(board)
    # print(soln)
     return soln
    # raise NotImplementedError
-"""
 
-"""
-def csp(board,pents):
-    #find the first open spot going right to left
-    #pent = pents[len(pents)-1]
-    for r in range(board.shape[0]):
-        for c in range(board.shape[1]):#go through entire board
-            if board[r][c]==-1: #if a spot is empty
-                #try each pent at the spot
-                for pent in pents:
-                    #make sure to try all rotations of the piece
-                    for flipnum in range(3): 
-                        p = np.copy(pent)
-                        if flipnum > 0:
-                            p = np.flip(pent, flipnum-1)
-                        for rot_num in range(4):
-                         #   print("trying pent: ",pent," on board \n",board)
-                            if(add(board,pent,[r,c])):
-                          #      print("success!")
-                                pents.remove(pent)
-                                soln.append((p,(r,c)))
-                                csp(board,pents)
-                                if len(soln)>=len(pents):
-                                    #if u come back from recursive call and soln is full ur done
-                                    return
-                            p = np.rot90(p)
-            """
-
-class PentStruct:
+class Pent():
     #these two variable declared outside init without self are static/class variables (consistent throughout all instances of class)
-    count_spots=0
-    available=True 
-    def __init__(self,givenID,numpents):
+    #they're essentially so all objects can see
+    count_spots=[]
+    available=[]
+    win=0
+    def __init__(self,givenID,array,givenr=0,givenc=0,fn=0,rn=0):
         self.id=givenID
-
-class Pent(PentStruct):
-    def __init__(self,idgiven,array,givenr=0,givenc=0,fn=0,rn=0):
-        super().__init__(idgiven)
         self.r=givenr #note this r,c is the topleft of the corner array.
         self.c=givenc
         self.flipnum=fn
         self.rotnum=rn
         self.arr=array
-        
+        self.orientation_used=False     
 
 def pent_init(pents,board):
     """
@@ -106,6 +59,8 @@ def pent_init(pents,board):
     """
     b={}
     for p in pents:
+        Pent.count_spots.append(0) #for every pent add a corresponding count and available bool
+        Pent.available.append(True)
         id=get_pent_idx(p)
         for row in range(board.shape[0]):
             for col in range(board.shape[1]):
@@ -117,14 +72,14 @@ def pent_init(pents,board):
                     for rot_num in range(4):
                 #        print(p)
                 #        print('\t',row,p.shape[0],col,p.shape[1])
-                        if row+p.shape[0] <= board.shape[0] and col+p.shape[1] <= board.shape[1]: #this means it fits on board at this position
+                        if row+len(p) <= board.shape[0] and col+len(p[0]) <= board.shape[1]: #this means it fits on board at this position
                 #            print("fits board dimensions")
                             p_obj=Pent(id,p,row,col,flipnum,rot_num)
-                            p_obj.count_spots+=1 #because we are adding a potential spot of where it can be
+                            p_obj.count_spots[p_obj.id-1]+=1 #because we are adding a potential spot of where it can be
                             #now loop through pent array and add r,c locations to dictionary if needed
-                            for r in range(p.shape[0]): 
-                                for c in range(p.shape[1]):
-                 #                   print('\t',r,p.shape[0],c,p.shape[1])
+                            for r in range(len(p)): 
+                                for c in range(len(p[0])):
+                 #                   print('\t',r,len(p),c,len(p[0]))
                                     if p[r][c] != 0:
                                         if (row+r,col+c) in b.keys():
                                             pent_in=False   #check to make sure you're not reusing the rotations that are equivalent (rotating squre vs. L shape)
@@ -139,27 +94,77 @@ def pent_init(pents,board):
 
     return b
 
-
-def bt(b,available_locs):#available locations will have to hold the values of locations with 1 in them
+def backtrack(b,available_locs):#available locations will have to hold the values of locations with 1 in them ( available_locs should be list of tuples)
     #first chose row,col location with fewest possible pents. need list of row,col locations
+    if len(available_locs)==0:
+        Pent.win=1
+        return
     small_loc=available_locs[0] 
     for l in available_locs:
         if len(b[l])<len(b[small_loc]): #len runs in O(1) so don't be afraid to use it!
             small_loc=l
 
-    #now go through each pent's count_spots in that location and chose the one that has les
+    #now go through each pents and make a list with first being least possible locations
+    p_avail=False
+    possible_pents=[]
+    for p in b[small_loc]:
+        if not p.orientation_used: 
+            if p_avail==False: #first available pent
+                p_avail=True
+            possible_pents.append(p) #save as a pent option to check
+            p.orientation_used=True #make sure to change all pent/orientations on this r,c location to used! (bc nothing can occupy this spot!)
+            Pent.count_spots[p.id-1]-=1
+        #if by the end of this loop p-avail is false... then there's no available pent orientations for this spot! GG! Backtrack!
+        if p_avail==False: return
+    
+    #this should sort the possible pents in order from least spots it can go on to most!
+    possible_pents.sort(key=lambda x: Pent.count_spots[x.id-1]) #index minus one bc pents indices start from 1 unlike lists
+
+    for p in possible_pents: #now we have pent and location! Sooo. Place the pent!
+        soln[small_loc]=p #add it to solution dict (or change it from previous p if not in first round of this loop)
+        #go through locations in pent and remove them from available locations
+        removed=[] # locations removed from availble
+        changed=[] #pents changed to used=true
+        for r in range(len(p.arr)):
+            for c in range(len(p.arr[0])):
+                if (r+p.r,c+p.c) in available_locs:
+                    available_locs.remove((r+p.r, c+p.c)) #this should remove small_loc too
+                    removed.append((r+p.r, c+p.c))
+                for overlap_pent in b[(r+p.r,c+p.c)]: #NOTE: These are pents at this location... this is changing possible pents at other locations that the pent you are place at
+                    if overlap_pent.orientation_used==False: #need to do this to make sure u don't change pents that were already used by other locations back to true when backtracking
+                        overlap_pent.orientation_used=True 
+                        Pent.count_spots[p.id-1]-=1
+                        changed.append(overlap_pent)
+        backtrack(b,available_locs)
+        if Pent.win==1: return #if you win yay ur done!
+        #if u didn't win something didn't go right along this path so we got to back track and try next pent
+        available_locs.extend(removed)
+        for op in changed: #fix all the overlapping pents that u switched   |
+            op.orientation_used=False #think about case like _._._.| with  .|. .  the second one starts outside of the first but should still be marked as unavialbe
+                                        #which doesn't happen if you don't change all pieces in block to used=True
+            Pent.count_spots[p.id-1]+=1
+
+    #if u finished trying all the pents then something must have gone wrong before your move, so back track even more
+    del soln[p] #this p should be at the end of possible_pents so should be same as possible_pents.pop()
+    for p in possible_pents:
+        p.orientation_used=False 
+
+     
 
 
-
-
+    #probs need looping through ALL locations and ALL pents changing orientation used to false, bc if u use a pent 
+    #on some unrelated pent possible orientation across the board it would change how many pents are available !
+    #don't we need a big for loop outside of small loc, constantly chosing small locations? --maybe not let's see
+    #also where is the win condition? where do i set win=1
 
 def get_pent_idx(pent):
     """
     Returns the index of a pentomino.
     """
     pidx = 0
-    for i in range(pent.shape[0]):
-        for j in range(pent.shape[1]):
+    
+    for i in range(len(pent)):
+        for j in range(len(pent[0])):
             if pent[i][j] != 0:
                 pidx = pent[i][j]
                 break
@@ -169,15 +174,30 @@ def get_pent_idx(pent):
         return -1
     return pidx - 1
 
+def put_on_board(board):
+    for loc in soln:
+        p=soln[loc]
+        for r in range(len(p.arr)):
+            for c in range(len(p.arr[0])):
+                print(loc[0],r,loc[1],c)
+                board[loc[0]+r][loc[1]+c]=p.arr[r][c]
 
 if __name__=="__main__":
     #THIS PART TESTS PENT INIT!
-    #pents= [np.array([[1],[1]]),np.array([[2],[2]])]
+   # pents= [np.array([[1],[1]]),np.array([[2],[2]])]
     pents=[np.array([[1,0],[1,1]]),np.array([[2,0],[2,2]])]
-    board = np.ones((2,2))
-    print(pents,'\n',board)
-    b=pent_init(pents,board)
-    for ind in b:
+   # board = np.ones((2,2))
+    board=np.ones((2,3))
+    # print(pents,'\n',board)
+    # b=pent_init(pents,board)
+    # for ind in b:
+    #     print(ind,":")
+    #     for i in b[ind]:
+    #         print("\t",i.id,i.arr)
+
+    solve(board,pents)
+    for ind in soln:
         print(ind,":")
-        for i in b[ind]:
-            print("\t",i.id,i.arr)
+        for i in soln[ind].arr:
+            print(i)
+            #print("\t",i.id,i.arr)
