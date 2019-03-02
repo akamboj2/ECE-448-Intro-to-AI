@@ -524,7 +524,7 @@ class ultimateTicTacToe:
         #YOUR CODE HERE
         bestMove=[]
         gameBoards=[]
-        self.designedExpandedNodes=[]
+        self.designedExpandedNodes=[] #this is bc we don't return expanded nodes so if we want to count them, we need something here
         atglobal=randint(0,8) #stores which global index we are at
         self.currPlayer= True if randint(0,1) else False #This will imply that the predefined agent is going first (offensive)
         print("Start:",atglobal,"You go ","first" if self.currPlayer else "second")
@@ -534,20 +534,18 @@ class ultimateTicTacToe:
             options = {} #holds potential moves so we know which one returns the max
             best=None #just place holder for human move
             bestidx=0
-            if self.currPlayer:
-                move=0
+            if self.currPlayer: #human player, read input
                 while(True):
                     print("At Board Index: ",atglobal)
-                    print("What would you like to move (0-9 on small board)?")
                     self.printGameBoard()
-                    input(move)
+                    bestidx=int(input("What would you like to move (0-9 on small board)?"))
                     gi= self.globalIdx[atglobal]
-                    row=gi[0]+i//3
-                    col=gi[1]+i%3
-                    if self.board[row][col]=='_': break 
+                    row=gi[0]+bestidx//3
+                    col=gi[1]+bestidx%3
+                    if bestidx<9 and bestidx>=0 and self.board[row][col]=='_': break 
                     print("invalid move, try again!")
-                best =
-            else:
+                best=(self.globalIdx[atglobal][0]+bestidx//3,self.globalIdx[atglobal][1]+bestidx%3)
+            else: #Ai my agent player
                 for i in range(9):
                     gi= self.globalIdx[atglobal]
                     row=gi[0]+i//3
@@ -609,8 +607,9 @@ class ultimateTicTacToe:
 
 if __name__=="__main__":
     uttt=ultimateTicTacToe()
-    gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,False,False)#(True,False,False)
+   # gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,False,False)#(True,False,False)
     #gameBoards, bestMove, winner=uttt.playGameYourAgent()
+    gameBoards, bestMove, winner=uttt.playGameHuman()
 
     # for gb in gameBoards:
     #     for line in gb:
@@ -619,15 +618,21 @@ if __name__=="__main__":
     #print("BestMove: ",bestMove, "BestValue: ",bestValue)
     uttt.printGameBoard()
     #print("number of nodes expanded in last turn: ", expandedNodes[len(expandedNodes)-1])
-    print("Total number of expanded nodes: ",sum(expandedNodes))
+    #print("Total number of expanded nodes: ",sum(expandedNodes))
 
-    
     if winner == 1:
-        print("The winner is maxPlayer!!!")
+        print("The winner is HumanPlayer!!!")
     elif winner == -1:
-        print("The winner is minPlayer!!!")
+        print("The winner is AIAgent!!!")
     else:
         print("Tie. No winner:(")
+
+    # if winner == 1:
+    #     print("The winner is maxPlayer!!!")
+    # elif winner == -1:
+    #     print("The winner is minPlayer!!!")
+    # else:
+    #     print("Tie. No winner:(")
 
     #uttt.testMyAgent()
 
