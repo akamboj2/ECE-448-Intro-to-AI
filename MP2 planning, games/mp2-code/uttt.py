@@ -538,7 +538,11 @@ class ultimateTicTacToe:
                 while(True):
                     print("At Board Index: ",atglobal)
                     self.printGameBoard()
-                    bestidx=int(input("What would you like to move (0-9 on small board)?"))
+                    try:
+                        bestidx=int(input("What would you like to move (0-9 on small board)?"))
+                    except:
+                        print("Error: Try again")
+                        continue
                     gi= self.globalIdx[atglobal]
                     row=gi[0]+bestidx//3
                     col=gi[1]+bestidx%3
