@@ -172,7 +172,7 @@ class ultimateTicTacToe:
         score=0
         for r in rows:
             if isMax:
-                print("NEVER TRUEEEE\n\n\n\n\n")
+        #        print("NEVER TRUEEEE\n\n\n\n\n")
                 if r.count(self.maxPlayer)==2 and (self.minPlayer not in r): #two in a row unblocked
                     score+=self.twoInARowMaxUtility
                 if r.count(self.minPlayer)==2 and r.count(self.maxPlayer)==1: #max blocks min
@@ -470,7 +470,7 @@ class ultimateTicTacToe:
         self.designedExpandedNodes=[]
         atglobal=randint(0,8) #stores which global index we are at
         self.currPlayer= True if randint(0,1) else False #This will imply that the predefined agent is going first (offensive)
-        print("Randomness: ",atglobal,self.currPlayer)
+    #    print("Randomness: ",atglobal,self.currPlayer)
 
         while (self.checkMovesLeft() and not self.checkWinner()):
             values = []
@@ -611,9 +611,10 @@ class ultimateTicTacToe:
 
 if __name__=="__main__":
     uttt=ultimateTicTacToe()
-   # gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,False,False)#(True,False,False)
+    gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(False,True,False)#(True,False,False)
+    print(bestMove,bestValue,winner)
     #gameBoards, bestMove, winner=uttt.playGameYourAgent()
-    gameBoards, bestMove, winner=uttt.playGameHuman()
+    #gameBoards, bestMove, winner=uttt.playGameHuman()
 
     # for gb in gameBoards:
     #     for line in gb:
@@ -624,19 +625,19 @@ if __name__=="__main__":
     #print("number of nodes expanded in last turn: ", expandedNodes[len(expandedNodes)-1])
     #print("Total number of expanded nodes: ",sum(expandedNodes))
 
-    if winner == 1:
-        print("The winner is HumanPlayer!!!")
-    elif winner == -1:
-        print("The winner is AIAgent!!!")
-    else:
-        print("Tie. No winner:(")
-
     # if winner == 1:
-    #     print("The winner is maxPlayer!!!")
+    #     print("The winner is HumanPlayer!!!")
     # elif winner == -1:
-    #     print("The winner is minPlayer!!!")
+    #     print("The winner is AIAgent!!!")
     # else:
     #     print("Tie. No winner:(")
+
+    if winner == 1:
+        print("The winner is maxPlayer!!!")
+    elif winner == -1:
+        print("The winner is minPlayer!!!")
+    else:
+        print("Tie. No winner:(")
 
     #uttt.testMyAgent()
 
