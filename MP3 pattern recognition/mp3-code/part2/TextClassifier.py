@@ -49,7 +49,7 @@ class TextClassifier(object):
             for j,word in enumerate(text):
                 if word not in self.liklihood: #inintialize word with class array in dictionary if it hasn't been seen before
                     self.liklihood[word]=[0]*14
-                self.liklihood[wsxord][train_label[i]-1]+=1 #count how many times the word has been seen
+                self.liklihood[word][train_label[i]-1]+=1 #count how many times the word has been seen
                 
                 if j==len(text)-1: continue
                 if (word,text[j+1]) not in self.bigram:
@@ -137,7 +137,7 @@ class TextClassifier(object):
         
         #average classification rate is accuracy
         accuracy=sum(classif_rate)/len(classif_rate)
-        """print("classification rates:",classif_rate)
+        print("classification rates:",classif_rate)
         print("accuracy:",accuracy)
 
         #20 top feature words:
@@ -164,6 +164,6 @@ class TextClassifier(object):
             for _,pair in enumerate(s_dic):
                 print('"'+str(pair[0])+'"',"\t\twith probability given this class: ","{0:.8f}".format(pair[1]))
 
-        """
+        
         return accuracy,result
 

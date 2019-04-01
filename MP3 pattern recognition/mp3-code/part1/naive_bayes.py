@@ -65,7 +65,7 @@ class NaiveBayes(object):
 		self.prior/=train_label
 		"""
 		#laplace smoothing
-		k=2
+		k=.1
 		self.likelihood+=k
 		for i in range(self.num_class):
 			self.likelihood[:,:,i]/=(sample_count[i]+self.num_value*k)
@@ -110,7 +110,7 @@ class NaiveBayes(object):
 		hi_val=np.zeros(self.num_class) #this will hold max prob 
 		hi_img=np.zeros((self.num_class,self.feature_dim))	#this will hold max img data in dim 
 		lo_val=np.zeros(self.num_class) #this will hold lowest prob 
-		lo_img=np.ones((self.num_class,self.feature_dim))	#this will hold lowest img data in dim 
+		lo_img=np.zeros((self.num_class,self.feature_dim))	#this will hold lowest img data in dim 
 
 		
 		for i,test in enumerate(test_set): #10000 test examples
@@ -134,7 +134,13 @@ class NaiveBayes(object):
 			#confusion matrix--jk apparently they already do this
 			#confusion[correct,prediction]+=1
 
-			#store highest and lowest probability 
+			#store highest and lowest probability
+			if hi_val[prediction]==0: #initialize it to first one
+				hi_val[prediction]=sum[prediction]
+				hi_img[prediction]=test
+				lo_val[prediction]=sum[prediction]
+				lo_img[prediction]=test
+				continue
 			if sum[prediction]>hi_val[prediction]:
 				hi_val[prediction]=sum[prediction]
 				hi_img[prediction]=test
@@ -154,10 +160,12 @@ class NaiveBayes(object):
 		"""
 
 		accuracy = np.average(classif_rate)
+		print("highest log probabilities:",hi_val)
+		print("lowest log probabilities:",lo_val)
 		print("classification rates:",classif_rate)
 		print("accuracy:",accuracy)
-
-		return accuracy, pred_label
+		
+		return accuracy, pred_label,np.transpose(hi_img),np.transpose(lo_img)
 
 
 	def save_model(self, prior, likelihood):

@@ -95,19 +95,35 @@ if __name__ == '__main__':
     num_value = 256
     class_names = np.array(["T-shirt/top","Trouser","Pullover","Dress",
         "Coat","Sandal","Shirt","Sneaker","Bag","Ankle boot"])
+    """ 
+    #testing various K values
+    NB = NaiveBayes(num_class,feature_dim,num_value)
+    ks=np.linspace(.1,10,100)
+    accuracies=[]
+    for i,k in enumerate(ks):
+        NB = NaiveBayes(num_class,feature_dim,num_value)
+        NB.train(x_train,y_train,k)
+        accuracy, _ = NB.test(x_test,y_test)
+        accuracies.append(accuracies)
+        print("done with k=",k," accuracy of ",accuracy)
+
+    print("max accuracy is ",max(accuracies), "with k= ",accuracies.index(max(accuracies)))
+
     
     NB = NaiveBayes(num_class,feature_dim,num_value)
     # Train model.
-  #  NB.train(x_train,y_train)
-  #  NB.save_model("testp","testli")
+    #NB.train(x_train,y_train)
+   # NB.save_model("testp","testli")
     NB.load_model("testp.npy","testli.npy")
     # Feature likelihood for high intensity pixels. 
     feature_likelihoods = NB.intensity_feature_likelihoods(NB.likelihood)
     # Visualize the feature likelihoods for high intensity pixels. 
     plot_visualization(feature_likelihoods, class_names, "Greys")
-
     # Classify the test sets. 
-    accuracy, y_pred = NB.test(x_test,y_test)
+    accuracy, y_pred, hi_img, lo_img = NB.test(x_test,y_test)
+    imshow(hi_img[:, 0].reshape((28, 28)))
+    plot_visualization(hi_img,class_names,"Greys")
+    plot_visualization(lo_img,class_names,"Greys")
     # Plot confusion matrix. 
     plot_confusion_matrix(y_test, y_pred, classes=class_names, normalize=True,
                       title='Confusion matrix, with normalization')
@@ -117,22 +133,32 @@ if __name__ == '__main__':
     # Initialize perceptron model.    
     perceptron = MultiClassPerceptron(num_class,feature_dim)
 
-    
+    """    
     #training loop:
     dfs=np.linspace(1,.1,91)
     base=np.linspace(1,.1,91)
     accs=np.zeros(91*91)
-    np.load("accs_accuracy_arr.nmpy",accs)
-
-    # for x,df in enumerate(dfs):
-    #     for y,b in enumerate(base):
-    #         perceptron.train(x_train,y_train,df,b)
-    #         accs[x*91+y],_=perceptron.test(x_test,y_test)
-    #         if x%5==0 and y==0: print("at: df ",df,", b",b, "w/ acc",accs[x])
-    # np.save("accs_accuracy_arr",accs)
+    np.load("accs_accuracy_arr.npy",accs)
+    print(accs)
+    for x,df in enumerate(dfs):
+        for y,b in enumerate(base):
+            perceptron.train(x_train,y_train,df,b)
+            accs[x*91+y],_=perceptron.test(x_test,y_test)
+            if x%5==0 and y==0: print("at: df ",df,", b",b, "w/ acc",accs[x])
+    np.save("accs_accuracy_arr",accs)
     maxi=accs.index(max(accs))
     print("Max is ",maxi," with val: ",dfs[int(maxi//91)],"and base ",base[int(maxi%91)])
+    """
+    # test=[]
+    # t=np.linspace(1,.1,10)
+    # for ind,val in enumerate(t):
+    #     perceptron.train(x_train,y_train,val)
+    #     a,_=perceptron.test(x_test,y_test)
+    #     test.append(a)
+    #     print("t=",val,"\tresult=",a)
+    # print("Max of",max(test))
     
+    """
     Testing cutoff lowest:
     Max is  0.7502  with val:  0.68
 
@@ -160,36 +186,17 @@ if __name__ == '__main__':
     at: df  0.15000000000000002 , b 1.0 w/ acc 0.7386
     at: df  0.1 , b 1.0 w/ acc 0.7419
     
-    
-    at: df  1.0 , b 1.0 w/ acc 0.6895
-at: df  0.95 , b 1.0 w/ acc 0.681
-at: df  0.9 , b 1.0 w/ acc 0.6853999999999999
-at: df  0.85 , b 1.0 w/ acc 0.7487000000000001
-at: df  0.8 , b 1.0 w/ acc 0.7112
-at: df  0.75 , b 1.0 w/ acc 0.74
-at: df  0.7 , b 1.0 w/ acc 0.7079000000000001
-at: df  0.6499999999999999 , b 1.0 w/ acc 0.7306
-at: df  0.6 , b 1.0 w/ acc 0.7305
-at: df  0.55 , b 1.0 w/ acc 0.7279
-at: df  0.5 , b 1.0 w/ acc 0.6902
-at: df  0.44999999999999996 , b 1.0 w/ acc 0.6937
-at: df  0.4 , b 1.0 w/ acc 0.7245999999999999
-at: df  0.35 , b 1.0 w/ acc 0.7123
-at: df  0.29999999999999993 , b 1.0 w/ acc 0.7144000000000001
-at: df  0.25 , b 1.0 w/ acc 0.7649
-at: df  0.19999999999999996 , b 1.0 w/ acc 0.7327000000000001
-at: df  0.15000000000000002 , b 1.0 w/ acc 0.7386
-at: df  0.1 , b 1.0 w/ acc 0.7419
-
+    """
     # Train model.
-   # perceptron.train(x_train,y_train)
+    perceptron.train(x_train,y_train)
     # Visualize the learned perceptron weights. 
     plot_visualization(perceptron.w[:-1,:], class_names, None)
     # Classify the test sets. 
-    accuracy, y_pred = perceptron.test(x_test,y_test)
+    accuracy, y_pred,hi_img,lo_img = perceptron.test(x_test,y_test)
+    plot_visualization(hi_img,class_names,"Greys")
+    plot_visualization(lo_img,class_names,"Greys")
     # Plot confusion matrix.
     plot_confusion_matrix(y_test, y_pred, classes=class_names, normalize=True,
                       title='Confusion matrix, with normalization')
     plt.show()    
     
-"""
