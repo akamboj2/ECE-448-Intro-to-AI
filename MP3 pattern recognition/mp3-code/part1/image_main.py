@@ -109,12 +109,12 @@ if __name__ == '__main__':
 
     print("max accuracy is ",max(accuracies), "with k= ",accuracies.index(max(accuracies)))
 
-    
+    """
     NB = NaiveBayes(num_class,feature_dim,num_value)
     # Train model.
-    #NB.train(x_train,y_train)
+    NB.train(x_train,y_train)
    # NB.save_model("testp","testli")
-    NB.load_model("testp.npy","testli.npy")
+    #NB.load_model("testp.npy","testli.npy")
     # Feature likelihood for high intensity pixels. 
     feature_likelihoods = NB.intensity_feature_likelihoods(NB.likelihood)
     # Visualize the feature likelihoods for high intensity pixels. 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
                       title='Confusion matrix, with normalization')
     plt.show()
     
-    """
+    
     # Initialize perceptron model.    
     perceptron = MultiClassPerceptron(num_class,feature_dim)
 

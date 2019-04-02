@@ -87,7 +87,7 @@ class TextClassifier(object):
                 accuracy(float): average accuracy value for dev dataset
                 result (list) : predicted class for each text
         """
-
+       # print("TOTAL AMT OF TEXT EXAMPLES!:",len(x_set))
         accuracy = 0.0
         result = []
 
@@ -99,7 +99,7 @@ class TextClassifier(object):
         true_val_count=[0]*14 #counts how many of each class is in dev label
         classif_rate=[0]*14
         confusion=[[0 for x in range(14)] for x in range(14)]
-
+        
         for i,text in enumerate(x_set):
             sum_vals=[0]*14
             for j,word in enumerate(text):
@@ -110,37 +110,40 @@ class TextClassifier(object):
                         sum_bi_vals[c]+=math.log(self.bigram[(word,text[j+1])][c])
                         
             for c,_ in enumerate(sum_vals):
-                sum_vals[c]+=math.log(self.priors[c])
+                sum_vals[c]+= math.log(self.priors[c]) #math.log(1/14)
                 sum_bi_vals[c]+=math.log(self.priors[c])
                 sum_mix[c]=sum_vals[c]*(1-lambda_mix)+sum_bi_vals[c]*(lambda_mix)
 
             prediction = sum_mix.index(max(sum_mix)) +1   #plus 1 bc they want labels 1-14 not 0-13
             correct = dev_label[i]
             result.append(prediction)
- 
+            #print(prediction)
             #now update classification rate
             if prediction==correct:
                 classif_rate[correct-1]+=1
+           # if correct==1: print("ITS THERE!",prediction)
             true_val_count[correct-1]+=1
 
             #confusion matrix as well
             confusion[correct-1][prediction-1]+=1
             
-      #  print("Confusion Matrix:")
+        # print("class rate count:",classif_rate)
+        # print("true_val_count:",true_val_count)
+        #print("Confusion Matrix:")
         #get true classification rate (divide by true val count)
         for c,_ in enumerate(classif_rate):
             classif_rate[c]/=true_val_count[c]
             for c_pred,_ in enumerate(classif_rate):
                 confusion[c][c_pred]/=true_val_count[c]
-      #          print("{0:.6f}".format(confusion[c][c_pred]),end="") #will print a row of the confusion matrix
-      #      print()
+            #     print("{0:.5f}".format(confusion[c][c_pred]),end=" ") #will print a row of the confusion matrix
+            # print()
         
         #average classification rate is accuracy
         accuracy=sum(classif_rate)/len(classif_rate)
-        print("classification rates:",classif_rate)
-        print("accuracy:",accuracy)
+     #   print("classification rates:",classif_rate)
+     #   print("accuracy:",accuracy)
 
-        #20 top feature words:
+        """ #20 top feature words:
         print("feature words:")
         feat=[{} for x in range(14)] #each dictionary should be 20 words : values
         for word,class_arr in self.liklihood.items():
@@ -157,12 +160,13 @@ class TextClassifier(object):
         #print(feat)
         #maybe print these to a file for easier formatting
         for c,freq_dic in enumerate(feat):
-            print("\nFOR CLASS",c)
+            print("\n",c)
             #print(freq_dic)
             s_dic= sorted(freq_dic.items(),key=lambda kv_tuple: kv_tuple[1]) #lamda funciton takes one arg and just gets the first index of it
             s_dic.reverse()
             for _,pair in enumerate(s_dic):
-                print('"'+str(pair[0])+'"',"\t\twith probability given this class: ","{0:.8f}".format(pair[1]))
+             #   print('"'+str(pair[0])+'"',"\t\twith probability given this class: ","{0:.8f}".format(pair[1]))
+                print('"'+str(pair[0])+'"'," {0:.8f}".format(pair[1]))"""
 
         
         return accuracy,result

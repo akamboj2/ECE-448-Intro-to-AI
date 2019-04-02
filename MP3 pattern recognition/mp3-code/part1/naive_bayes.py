@@ -160,10 +160,10 @@ class NaiveBayes(object):
 		"""
 
 		accuracy = np.average(classif_rate)
-		print("highest log probabilities:",hi_val)
-		print("lowest log probabilities:",lo_val)
-		print("classification rates:",classif_rate)
-		print("accuracy:",accuracy)
+		# print("highest log probabilities:",hi_val)
+		# print("lowest log probabilities:",lo_val)
+		# print("classification rates:",classif_rate)
+		# print("accuracy:",accuracy)
 		
 		return accuracy, pred_label,np.transpose(hi_img),np.transpose(lo_img)
 

@@ -111,10 +111,10 @@ class MultiClassPerceptron(object):
 
 		classif_rate/=true_labels_count #element wise division
 		accuracy=np.average(classif_rate)
-		print("highest perceptron scores:",hi_val)
-		print("lowest perceptron scores:",lo_val)
-		print("classification rates:",classif_rate)
-		print("accuracy:",accuracy)
+		# print("highest perceptron scores:",hi_val)
+		# print("lowest perceptron scores:",lo_val)
+		# print("classification rates:",classif_rate)
+		# print("accuracy:",accuracy)
 
 		return accuracy, pred_label, np.transpose(hi_img),np.transpose(lo_img)
 
