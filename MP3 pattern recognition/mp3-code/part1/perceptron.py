@@ -116,7 +116,7 @@ class MultiClassPerceptron(object):
 		# print("classification rates:",classif_rate)
 		# print("accuracy:",accuracy)
 
-		return accuracy, pred_label, np.transpose(hi_img),np.transpose(lo_img)
+		return accuracy, pred_label #,np.transpose(hi_img),np.transpose(lo_img)
 
 	def save_model(self, weight_file):
 		""" Save the trained model parameters

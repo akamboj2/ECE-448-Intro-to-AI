@@ -112,18 +112,18 @@ if __name__ == '__main__':
     """
     NB = NaiveBayes(num_class,feature_dim,num_value)
     # Train model.
-    NB.train(x_train,y_train)
+   # NB.train(x_train,y_train)
    # NB.save_model("testp","testli")
-    #NB.load_model("testp.npy","testli.npy")
+    NB.load_model("testp.npy","testli.npy")
     # Feature likelihood for high intensity pixels. 
     feature_likelihoods = NB.intensity_feature_likelihoods(NB.likelihood)
     # Visualize the feature likelihoods for high intensity pixels. 
     plot_visualization(feature_likelihoods, class_names, "Greys")
     # Classify the test sets. 
-    accuracy, y_pred, hi_img, lo_img = NB.test(x_test,y_test)
-    imshow(hi_img[:, 0].reshape((28, 28)))
-    plot_visualization(hi_img,class_names,"Greys")
-    plot_visualization(lo_img,class_names,"Greys")
+    accuracy, y_pred = NB.test(x_test,y_test)
+    #imshow(hi_img[:, 0].reshape((28, 28)))
+    #plot_visualization(hi_img,class_names,"Greys")
+    #plot_visualization(lo_img,class_names,"Greys")
     # Plot confusion matrix. 
     plot_confusion_matrix(y_test, y_pred, classes=class_names, normalize=True,
                       title='Confusion matrix, with normalization')
@@ -192,9 +192,9 @@ if __name__ == '__main__':
     # Visualize the learned perceptron weights. 
     plot_visualization(perceptron.w[:-1,:], class_names, None)
     # Classify the test sets. 
-    accuracy, y_pred,hi_img,lo_img = perceptron.test(x_test,y_test)
-    plot_visualization(hi_img,class_names,"Greys")
-    plot_visualization(lo_img,class_names,"Greys")
+    accuracy, y_pred= perceptron.test(x_test,y_test)
+    #plot_visualization(hi_img,class_names,"Greys")
+    #plot_visualization(lo_img,class_names,"Greys")
     # Plot confusion matrix.
     plot_confusion_matrix(y_test, y_pred, classes=class_names, normalize=True,
                       title='Confusion matrix, with normalization')
